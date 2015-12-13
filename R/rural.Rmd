@@ -1,0 +1,55 @@
+---
+title: "Settle_Rural"
+author: "coop711"
+date: "2015년 12월 13일"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data
+
+```{r, data, echo = FALSE, message = FALSE, results = 'hide'}
+library(xlsx)
+library(knitr)
+options(width=180)
+rural <- read.xlsx("./data_rural.xlsx", sheetIndex = 1, startRow = 6, endRow = 14, colIndex = c(4:11, 13:18), colClasses = c("character", rep("numeric", 13)), header = FALSE)
+is.na(rural)
+rural[6,2] <- 0.6
+rural.2 <- rural
+rural.2[is.na(rural)] <- 0
+```
+
+```{r, data reshaping, echo=FALSE}
+v.names <-c("location","poverty1", "poverty2", "aged", "disabled", "waterworks", "sewage", "toilet", "house", "slate", "vacant", "agreed1", "agreed2", "density")
+names(rural.2) <- v.names
+kable(rural.2)
+rural.3 <- rural.2
+rural.3$waterworks <- 100-rural.3$waterworks
+rural.3$sewage <- 100-rural.3$sewage
+```
+
+## Scores
+
+```{r, rank sums, echo=FALSE}
+rural.ranks <- mapply(rank, rural.3[2:13])
+kable(data.frame("소재지"=rural.3$location, rural.ranks), caption="순위")
+# str(rural.ranks)
+poverty.score <- round(rowMeans(rural.ranks[, 1:2])*6/9)
+aged.disabled.score <- round(rowMeans(rural.ranks[, 3:4])*4/9)
+waterworks.score <- round(rural.ranks[, 5]*4/9)
+sewage.score <- round(rural.ranks[, 6]*4/9)
+toilet.score <- round(rural.ranks[, 7]*4/9)
+house.score <- round(rural.ranks[, 8]*5/9)
+slate.score <- round(rural.ranks[, 9]*5/9)
+vacant.score <- round(rural.ranks[, 10]*2/9)
+agreed.score <- round(rowMeans(rural.ranks[, 11:12])*6/9)
+scores <- data.frame("수급/차상위"=poverty.score, "고령/장애"=aged.disabled.score, "상수도"=waterworks.score, "하수도"=sewage.score, "화장실"=toilet.score, "노후주택"=house.score, "슬레이트"=slate.score, "공가"=vacant.score, "동의율"=agreed.score)
+total <- rowSums(scores)
+rural.scores <- data.frame("소재지" = rural.3$location, scores, "소계" = total)
+kable(rural.scores, caption = "배점 반영")
+grade <- ifelse(rank(total) <= 3, "하", ifelse(rank(total) <= 6, "중", "상"))
+kable(data.frame("소재지"=rural.3$location, "소계"=total, "순위"=10-rank(total), "등급" = grade), align=rep("c", 4), caption = "등급표")
+```

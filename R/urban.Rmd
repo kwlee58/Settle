@@ -1,0 +1,58 @@
+---
+title: "Settle_Urban"
+author: "coop711"
+date: "2015년 12월 13일"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data
+
+```{r, data, echo = FALSE, message = FALSE, results = 'hide'}
+library(xlsx)
+library(knitr)
+options(width=180)
+urban <- read.xlsx("./data_urban.xlsx", sheetIndex = 1, startRow = 6, endRow = 13, colIndex = c(2, 5:20), colClasses = c("character", rep("numeric", 16)), header = FALSE)
+is.na(urban)
+urban.2 <- urban
+urban.2[is.na(urban)] <- 0
+```
+
+```{r, data reshaping, echo=FALSE}
+v.names <-c("location", "roads", "waterworks", "sewage", "city_gas", "parcel", "house", "illegal", "slate", "vacant", "toilet", "pop_density", "poverty1", "poverty2", "aged", "lone.aged", "disabled")
+names(urban.2) <- v.names
+kable(urban.2)
+urban.3 <- urban.2
+urban.3$waterworks <- 100-urban.3$waterworks
+urban.3$sewage <- 100-urban.3$sewage
+urban.3$city_gas <- 100-urban.3$city_gas
+```
+
+## Scores
+
+```{r, rank sums, echo=FALSE}
+urban.ranks <- mapply(rank, urban.3[2:17])
+kable(data.frame(urban.3$location, urban.ranks), caption="순위")
+# str(urban.ranks)
+```
+
+```{r, scores, echo=FALSE}
+road.score <- round(urban.ranks[, 1])
+water_gas.score <- round(rowMeans(urban.ranks[, 2:4])*7/8)
+parcel.score <- round(urban.ranks[, 5]*5/8)
+house.score <- round(urban.ranks[, 6]*3/8)
+illegal.score <- round(rowMeans(urban.ranks[, 7:9]*5/8))
+toilet.score <- round(urban.ranks[, 10]*7/8)
+pop_density.score <- round((9-urban.ranks[, 11])*3/8)
+poverty.score <- round(rowMeans(urban.ranks[, 12:13])*6/8)
+aged_disabled.score <- round(rowMeans(urban.ranks[, 14:16])*6/8)
+scores <- data.frame("불량도로주택"=road.score, "수도가스"=water_gas.score,  "과소필지"=parcel.score, "노후주택"=house.score, "무허가"=illegal.score, "화장실"=toilet.score, "인구밀도"=pop_density.score, "수급차상위"=poverty.score, "고령장애"=aged_disabled.score)
+total <- rowSums(scores)
+urban.scores <- data.frame("소재지" = urban.3$location, scores, "소계" = total)
+kable(urban.scores, caption = "배점 반영")
+grade <- ifelse(rank(total) <= 2, "하", ifelse(rank(total) <= 5, "중", "상"))
+kable(data.frame("소재지"=urban.3$location, "소계"=total, "순위"=9-rank(total), "등급" = grade), align=rep("c", 4), caption = "등급표")
+```

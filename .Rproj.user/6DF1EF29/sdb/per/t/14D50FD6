@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"Settle_Urban\"\nauthor: \"coop711\"\ndate: \"2015년 12월 13일\"\noutput: html_document\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = TRUE)\n```\n\n## Data\n\n```{r, data, echo = FALSE, message = FALSE, results = 'hide'}\nlibrary(xlsx)\nlibrary(knitr)\noptions(width=180)\nurban <- read.xlsx(\"./data_urban.xlsx\", sheetIndex = 1, startRow = 6, endRow = 13, colIndex = c(2, 5:20), colClasses = c(\"character\", rep(\"numeric\", 16)), header = FALSE)\nis.na(urban)\nurban.2 <- urban\nurban.2[is.na(urban)] <- 0\n```\n\n```{r, data reshaping, echo=FALSE}\nv.names <-c(\"location\", \"roads\", \"waterworks\", \"sewage\", \"city_gas\", \"parcel\", \"house\", \"illegal\", \"slate\", \"vacant\", \"toilet\", \"pop_density\", \"poverty1\", \"poverty2\", \"aged\", \"lone.aged\", \"disabled\")\nnames(urban.2) <- v.names\nkable(urban.2)\nurban.3 <- urban.2\nurban.3$waterworks <- 100-urban.3$waterworks\nurban.3$sewage <- 100-urban.3$sewage\nurban.3$city_gas <- 100-urban.3$city_gas\n```\n\n## Scores\n\n```{r, rank sums, echo=FALSE}\nurban.ranks <- mapply(rank, urban.3[2:17])\nkable(data.frame(urban.3$location, urban.ranks), caption=\"순위\")\n# str(urban.ranks)\n```\n\n```{r, scores, echo=FALSE}\nroad.score <- round(urban.ranks[, 1])\nwater_gas.score <- round(rowMeans(urban.ranks[, 2:4])*7/8)\nparcel.score <- round(urban.ranks[, 5]*5/8)\nhouse.score <- round(urban.ranks[, 6]*3/8)\nillegal.score <- round(rowMeans(urban.ranks[, 7:9]*5/8))\ntoilet.score <- round(urban.ranks[, 10]*7/8)\npop_density.score <- round((9-urban.ranks[, 11])*3/8)\npoverty.score <- round(rowMeans(urban.ranks[, 12:13])*6/8)\naged_disabled.score <- round(rowMeans(urban.ranks[, 14:16])*6/8)\nscores <- data.frame(\"불량도로주택\"=road.score, \"수도가스\"=water_gas.score,  \"과소필지\"=parcel.score, \"노후주택\"=house.score, \"무허가\"=illegal.score, \"화장실\"=toilet.score, \"인구밀도\"=pop_density.score, \"수급차상위\"=poverty.score, \"고령장애\"=aged_disabled.score)\ntotal <- rowSums(scores)\nurban.scores <- data.frame(\"소재지\" = urban.3$location, scores, \"소계\" = total)\nkable(urban.scores, caption = \"배점 반영\")\ngrade <- ifelse(rank(total) <= 2, \"하\", ifelse(rank(total) <= 5, \"중\", \"상\"))\nkable(data.frame(\"소재지\"=urban.3$location, \"소계\"=total, \"순위\"=9-rank(total), \"등급\" = grade), align=rep(\"c\", 4), caption = \"등급표\")\n```\n",
+    "created" : 1449973422541.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "815561370",
+    "id" : "14D50FD6",
+    "lastKnownWriteTime" : 1449988367,
+    "path" : "~/Desktop/Works/Research_Data/Settle/urban.Rmd",
+    "project_path" : "urban.Rmd",
+    "properties" : {
+        "tempName" : "Untitled2"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

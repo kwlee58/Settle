@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"Settle_Rural\"\nauthor: \"coop711\"\ndate: \"2015년 12월 13일\"\noutput: html_document\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = TRUE)\n```\n\n## Data\n\n```{r, data, echo = FALSE, message = FALSE, results = 'hide'}\nlibrary(xlsx)\nlibrary(knitr)\noptions(width=180)\nrural <- read.xlsx(\"./data_rural.xlsx\", sheetIndex = 1, startRow = 6, endRow = 14, colIndex = c(4:11, 13:18), colClasses = c(\"character\", rep(\"numeric\", 13)), header = FALSE)\nis.na(rural)\nrural[6,2] <- 0.6\nrural.2 <- rural\nrural.2[is.na(rural)] <- 0\n```\n\n```{r, data reshaping, echo=FALSE}\nv.names <-c(\"location\",\"poverty1\", \"poverty2\", \"aged\", \"disabled\", \"waterworks\", \"sewage\", \"toilet\", \"house\", \"slate\", \"vacant\", \"agreed1\", \"agreed2\", \"density\")\nnames(rural.2) <- v.names\nkable(rural.2)\nrural.3 <- rural.2\nrural.3$waterworks <- 100-rural.3$waterworks\nrural.3$sewage <- 100-rural.3$sewage\n```\n\n## Scores\n\n```{r, rank sums, echo=FALSE}\nrural.ranks <- mapply(rank, rural.3[2:13])\nkable(data.frame(\"소재지\"=rural.3$location, rural.ranks), caption=\"순위\")\n# str(rural.ranks)\npoverty.score <- round(rowMeans(rural.ranks[, 1:2])*6/9)\naged.disabled.score <- round(rowMeans(rural.ranks[, 3:4])*4/9)\nwaterworks.score <- round(rural.ranks[, 5]*4/9)\nsewage.score <- round(rural.ranks[, 6]*4/9)\ntoilet.score <- round(rural.ranks[, 7]*4/9)\nhouse.score <- round(rural.ranks[, 8]*5/9)\nslate.score <- round(rural.ranks[, 9]*5/9)\nvacant.score <- round(rural.ranks[, 10]*2/9)\nagreed.score <- round(rowMeans(rural.ranks[, 11:12])*6/9)\nscores <- data.frame(\"수급/차상위\"=poverty.score, \"고령/장애\"=aged.disabled.score, \"상수도\"=waterworks.score, \"하수도\"=sewage.score, \"화장실\"=toilet.score, \"노후주택\"=house.score, \"슬레이트\"=slate.score, \"공가\"=vacant.score, \"동의율\"=agreed.score)\ntotal <- rowSums(scores)\nrural.scores <- data.frame(\"소재지\" = rural.3$location, scores, \"소계\" = total)\nkable(rural.scores, caption = \"배점 반영\")\ngrade <- ifelse(rank(total) <= 3, \"하\", ifelse(rank(total) <= 6, \"중\", \"상\"))\nkable(data.frame(\"소재지\"=rural.3$location, \"소계\"=total, \"순위\"=10-rank(total), \"등급\" = grade), align=rep(\"c\", 4), caption = \"등급표\")\n```\n",
+    "created" : 1449988103543.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2809096586",
+    "id" : "6501BAF3",
+    "lastKnownWriteTime" : 1449988570,
+    "path" : "~/Desktop/Works/Research_Data/Settle/rural.Rmd",
+    "project_path" : "rural.Rmd",
+    "properties" : {
+        "tempName" : "Untitled2"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
